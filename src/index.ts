@@ -69,6 +69,7 @@ async function getDriver(): Promise<WebDriver> {
     const browserName = getBrowserName();
     console.log(chalk.green(MODULE_NAME), 'Using browser:', browserName);
     console.log(chalk.green(MODULE_NAME), 'Headless:', isHeadless());
+    console.log(chalk.green(MODULE_NAME), 'Debug:', isDebug());
     const driver = await new Builder()
         .forBrowser(browserName)
         .setChromeOptions(getChromeOptions())
@@ -90,10 +91,10 @@ async function saveDebugPage(driver: WebDriver) {
     }
 
     try {
-        const tempPath = path.join(os.tmpdir(), `debug-${Date.now()}.html`);
+        const tempPath = path.join(os.tmpdir(), `WebSearch-debug-${Date.now()}.html`);
         const pageSource = await driver.getPageSource();
         await fs.promises.writeFile(tempPath, pageSource, 'utf-8');
-        console.log(chalk.green(MODULE_NAME), 'Saving debug page');
+        console.log(chalk.green(MODULE_NAME), 'Saving debug page to', tempPath);
     } catch (error) {
         console.error(chalk.red(MODULE_NAME), 'Failed to save debug page', error);
     }
@@ -104,8 +105,10 @@ async function performGoogleSearch(query: string): Promise<SearchResult> {
     try {
         console.log(chalk.green(MODULE_NAME), 'Searching Google for:', query);
         await driver.get(`https://google.com/search?hl=en&q=${encodeURIComponent(query)}`);
-        await driver.wait(until.elementLocated(By.id('res')), TIMEOUT);
         await saveDebugPage(driver);
+
+        // Wait for the main content
+        await driver.wait(until.elementLocated(By.id('res')), TIMEOUT);
 
         // Get text from different sections
         const text = [
@@ -115,7 +118,7 @@ async function performGoogleSearch(query: string): Promise<SearchResult> {
             await getTextBySelector(driver, '.yDYNvb.lyLwlc'), // Old selectors (for compatibility)
         ].join('\n');
 
-        // Get links
+        // Get links from the results
         const links = await driver.findElements(By.css('.yuRUbf a'));
         const linksText = await Promise.all(links.map(el => el.getAttribute('href')));
 
@@ -135,10 +138,10 @@ async function performDuckDuckGoSearch(query: string): Promise<SearchResult> {
         // Wait for the main content
         await driver.wait(until.elementLocated(By.id('web_content_wrapper')), TIMEOUT);
 
-        // Get text
+        // Get text from the snippets
         const text = await getTextBySelector(driver, '[data-result="snippet"]');
 
-        // Get links
+        // Get links from the results
         const links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
         const linksText = await Promise.all(links.map(el => el.getAttribute('href')));
 
@@ -155,6 +158,9 @@ async function performDuckDuckGoSearch(query: string): Promise<SearchResult> {
  */
 export async function init(router: Router) {
     const jsonParser = bodyParser.json();
+    router.post('/probe', (_req, res) => {
+        return res.sendStatus(204);
+    });
     router.post('/search', jsonParser, async (req, res) => {
         try {
             switch (req.body.engine) {
@@ -175,17 +181,17 @@ export async function init(router: Router) {
         }
     });
 
-    console.log(chalk.green(MODULE_NAME), 'Plugin initialized');
+    console.log(chalk.green(MODULE_NAME), 'Plugin loaded!');
 }
 
 export async function exit() {
-    console.log(chalk.red(MODULE_NAME), 'Plugin exited');
+    console.log(chalk.yellow(MODULE_NAME), 'Plugin exited');
 }
 
 export const info = {
     id: 'selenium',
     name: 'WebSearch Selenium',
-    description: 'Search the web using Selenium',
+    description: 'Search the web using Selenium. Requires a WebSearch UI extension.',
 };
 
 const plugin = {

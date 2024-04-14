@@ -22,6 +22,7 @@ module.exports = {
         'node_modules/',
         'dist/',
         'out/',
+        'bin/',
     ],
     rules: {
         'no-unused-vars': ['error', { args: 'none' }],

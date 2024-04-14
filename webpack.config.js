@@ -1,7 +1,9 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const serverConfig = {
+    devtool: false,
     target: 'node',
     entry: './src/index.ts',
     output: {
@@ -23,7 +25,6 @@ const serverConfig = {
         ],
     },
     optimization: {
-        minimize: true,
         minimizer: [
             new TerserPlugin({
                 extractComments: false,
@@ -35,6 +36,16 @@ const serverConfig = {
             }),
         ],
     },
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: 'node_modules/selenium-webdriver/bin',
+                    to: '../bin',
+                },
+            ],
+        }),
+    ],
 };
 
 module.exports = [serverConfig];
