@@ -14,6 +14,18 @@ interface SearchResult {
     links: string[];
 }
 
+interface PluginInfo {
+    id: string;
+    name: string;
+    description: string;
+}
+
+interface Plugin {
+    init: (router: Router) => Promise<void>;
+    exit: () => Promise<void>;
+    info: PluginInfo;
+}
+
 const chalk = new Chalk();
 const TIMEOUT = 5000;
 const MODULE_NAME = '[SillyTavern-WebSearch-Selenium]';
@@ -156,7 +168,7 @@ async function performDuckDuckGoSearch(query: string): Promise<SearchResult> {
  * Initialize the plugin.
  * @param router Express Router
  */
-export async function init(router: Router) {
+export async function init(router: Router): Promise<void> {
     const jsonParser = bodyParser.json();
     router.post('/probe', (_req, res) => {
         return res.sendStatus(204);
@@ -184,17 +196,17 @@ export async function init(router: Router) {
     console.log(chalk.green(MODULE_NAME), 'Plugin loaded!');
 }
 
-export async function exit() {
+export async function exit(): Promise<void> {
     console.log(chalk.yellow(MODULE_NAME), 'Plugin exited');
 }
 
-export const info = {
+export const info: PluginInfo = {
     id: 'selenium',
     name: 'WebSearch Selenium',
     description: 'Search the web using Selenium. Requires a WebSearch UI extension.',
 };
 
-const plugin = {
+const plugin: Plugin = {
     init,
     exit,
     info,
