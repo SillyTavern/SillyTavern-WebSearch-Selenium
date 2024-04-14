@@ -4,22 +4,24 @@ Add-on for the Web Search extension that provides the web browsing capabilities 
 
 ## How to install
 
-> This plugin will not in Termux.
+> This plugin will not work in Termux.
 
-Before you begin, make sure you set a config `enableServerPlugins` to `true` in the config.yaml file of SillyTavern.
+1. Before you begin, make sure you set a config `enableServerPlugins` to `true` in the config.yaml file of SillyTavern.
 
-Open a terminal in your SillyTavern directory, then run the following:
+2. Open a terminal in your SillyTavern directory, then run the following:
 
 ```bash
 cd plugins
 git clone https://github.com/SillyTavern/SillyTavern-WebSearch-Selenium
 ```
 
-Restart the SillyTavern server. Then choose "Selenium Plugin" as a source in the Web Search extension UI.
+3. Restart the SillyTavern server. Then choose "Selenium Plugin" as a source in the Web Search extension UI.
 
 ## Configuration
 
 The plugin can be configured using [environment variables](https://dev.to/pizofreude/environment-variables-a-comprehensive-guide-34dg) before startup:
+
+### Choose a preferred browser
 
 `ST_SELENIUM_BROWSER` (string) - sets the browser to be used. Default: `chrome`.
 
@@ -32,9 +34,13 @@ Possible values (case-sensitive!):
 
 A chosen browser must be available and installed on your machine.
 
-`ST_SELENIUM_HEADLESS` (boolean) - launches browser in the headless (no visible GUI) mode. Default: `true`.
+### Run in headless mode
 
-`ST_SELENIUM_DEBUG` (boolean) - save the HTML of search result pages to a temp directory. Default: `false`.
+* `ST_SELENIUM_HEADLESS` (boolean) - launches browser in the headless (no visible GUI) mode. Default: `true`.
+
+### Save debug pages
+
+* `ST_SELENIUM_DEBUG` (boolean) - save the HTML of search result pages to a temp directory. Default: `false`.
 
 ## How to build
 
