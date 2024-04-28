@@ -1,7 +1,7 @@
 {
     "name": "sillytavern-websearch-selenium",
     "version": "1.0.0",
-    "description": "Multiplayer extension for SillyTavern",
+    "description": "Search the web using Selenium. Requires a WebSearch UI extension.",
     "main": "dist/plugin.js",
     "type": "commonjs",
     "scripts": {
