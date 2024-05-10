@@ -4,7 +4,7 @@ Add-on for the Web Search extension that provides the web browsing capabilities 
 
 ## How to install
 
-> This plugin will not work in Termux.
+> This plugin will not work in Termux or any ARM64 Linux (Raspberry Pi, etc). See [this issue](https://github.com/SillyTavern/SillyTavern-WebSearch-Selenium/issues/1).
 
 1. Before you begin, make sure you set a config `enableServerPlugins` to `true` in the config.yaml file of SillyTavern.
 
