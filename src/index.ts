@@ -198,22 +198,21 @@ async function performDuckDuckGoSearch(query: string, includeImages: boolean, Li
         // Wait for the main content
         await driver.wait(until.elementLocated(By.id('web_content_wrapper')), config.TIMEOUT);
 
-        for (let NumberOfLinks = 0, Attempts = 0; LinkTarget >= NumberOfLinks && 3 >= Attempts;) {
-            await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
-            await driver.sleep(1000);
-            const links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
-            if (NumberOfLinks >= links.length) {
-                Attempts++
-            } else {
-                NumberOfLinks = links.length;
-            }
-        }
-
         // Get text from the snippets
         const text = await getTextBySelector(driver, '[data-result="snippet"]');
 
         // Get links from the results
         const links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
+        for (let PageHeight = 0, Attempts = 0; LinkTarget >= links.length && 5 >= Attempts;) {
+            await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
+            await driver.sleep(1000);
+            if (PageHeight >= document.body.scrollHeight) {
+                Attempts++
+            } else {
+                PageHeight = document.body.scrollHeight;
+                const links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
+            }
+        }
         const linksText = await Promise.all(links.map(el => el.getAttribute('href')));
 
         // Get images
