@@ -136,12 +136,12 @@ async function findFirstAndClick(driver: WebDriver, by: By): Promise<void> {
     }
 }
 
-async function performGoogleSearch(query: string, includeImages: boolean, link_target: number): Promise<SearchResult> {
+async function performGoogleSearch(query: string, includeImages: boolean, LinkTarget: number): Promise<SearchResult> {
     const config = new DriverConfig();
     const driver = await config.getDriver();
     try {
         console.log(chalk.green(MODULE_NAME), 'Searching Google for:', query);
-        await driver.get(`https://google.com/search?hl=en&q=${encodeURIComponent(query)}&num=${link_target}`);
+        await driver.get(`https://google.com/search?hl=en&q=${encodeURIComponent(query)}&num=${LinkTarget}`);
         await config.saveDebugPage(driver);
 
         // Wait for the main content
@@ -188,7 +188,7 @@ async function performGoogleSearch(query: string, includeImages: boolean, link_t
     }
 }
 
-async function performDuckDuckGoSearch(query: string, includeImages: boolean, link_target: number): Promise<SearchResult> {
+async function performDuckDuckGoSearch(query: string, includeImages: boolean, LinkTarget: number): Promise<SearchResult> {
     const config = new DriverConfig();
     const driver = await config.getDriver();
     try {
@@ -198,7 +198,7 @@ async function performDuckDuckGoSearch(query: string, includeImages: boolean, li
         // Wait for the main content
         await driver.wait(until.elementLocated(By.id('web_content_wrapper')), config.TIMEOUT);
 
-        for (let NumberOfLinks = 0, Attempts = 0; link_target >= NumberOfLinks && 3 >= Attempts;) {
+        for (let NumberOfLinks = 0, Attempts = 0; LinkTarget >= NumberOfLinks && 3 >= Attempts;) {
             await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
             await driver.sleep(1000);
             const links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
@@ -254,11 +254,11 @@ export async function init(router: Router): Promise<void> {
         try {
             switch (req.body.engine) {
                 case 'google': {
-                    const result = await performGoogleSearch(req.body.query, req.body.include_images, req.body.link_target);
+                    const result = await performGoogleSearch(req.body.query, req.body.include_images, req.body.LinkTarget);
                     return res.send(result);
                 }
                 case 'duckduckgo': {
-                    const result = await performDuckDuckGoSearch(req.body.query, req.body.include_images, req.body.link_target);
+                    const result = await performDuckDuckGoSearch(req.body.query, req.body.include_images, req.body.LinkTarget);
                     return res.send(result);
                 }
                 default:
