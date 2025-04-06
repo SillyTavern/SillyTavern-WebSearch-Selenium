@@ -118,6 +118,21 @@ class DriverConfig {
             console.error(chalk.red(MODULE_NAME), 'Failed to save debug page', error);
         }
     }
+
+    async getPageHeight(driver: WebDriver): Promise<number> {
+        return parseInt(await driver.executeScript('return document.body.scrollHeight'));
+    }
+
+    async waitForPageHeightIncrease(driver: WebDriver, previousPageHeight: number): Promise<number> {
+        for (let i = 0; i < 5; i++) {
+            const pageHeight = await this.getPageHeight(driver);
+            await driver.sleep(1000);
+            if (pageHeight > previousPageHeight) {
+                return pageHeight;
+            }
+        }
+        return previousPageHeight;
+    }
 }
 
 async function getTextBySelector(driver: WebDriver, selector: string): Promise<string> {
@@ -136,12 +151,12 @@ async function findFirstAndClick(driver: WebDriver, by: By): Promise<void> {
     }
 }
 
-async function performGoogleSearch(query: string, includeImages: boolean, LinkTarget: number): Promise<SearchResult> {
+async function performGoogleSearch(query: string, includeImages: boolean, maxLinks: number = 10): Promise<SearchResult> {
     const config = new DriverConfig();
     const driver = await config.getDriver();
     try {
         console.log(chalk.green(MODULE_NAME), 'Searching Google for:', query);
-        await driver.get(`https://google.com/search?hl=en&q=${encodeURIComponent(query)}&num=${LinkTarget}`);
+        await driver.get(`https://google.com/search?hl=en&q=${encodeURIComponent(query)}&num=${maxLinks}`);
         await config.saveDebugPage(driver);
 
         // Wait for the main content
@@ -188,10 +203,11 @@ async function performGoogleSearch(query: string, includeImages: boolean, LinkTa
     }
 }
 
-async function performDuckDuckGoSearch(query: string, includeImages: boolean, LinkTarget: number): Promise<SearchResult> {
+async function performDuckDuckGoSearch(query: string, includeImages: boolean, maxLinks: number = 10): Promise<SearchResult> {
     const config = new DriverConfig();
     const driver = await config.getDriver();
     try {
+        console.log(chalk.green(MODULE_NAME), 'Searching DuckDuckGo for:', query);
         await driver.get(`https://duckduckgo.com/?kl=wt-wt&kp=-2&kav=1&kf=-1&kac=-1&kbh=-1&ko=-1&k1=-1&kv=n&kz=-1&kat=-1&kbg=-1&kbe=0&kpsb=-1&q=${encodeURIComponent(query)}`);
         await config.saveDebugPage(driver);
 
@@ -200,15 +216,16 @@ async function performDuckDuckGoSearch(query: string, includeImages: boolean, Li
 
         // Get links from the results
         let links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
-        for (let PreviousPageHeight = 0, PageHeight = 0, Attempts = 0; LinkTarget >= links.length && 5 >= Attempts;) {
-            await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
-            await driver.sleep(1000);
-            PageHeight = await driver.executeScript('return document.body.scrollHeight');
-            if (PageHeight > PreviousPageHeight) {
+        let currentPageHeight = await config.getPageHeight(driver);
+        if (links.length < maxLinks) {
+            // Scroll down to load more results
+            for (let i = 0; i < 5; i++) {
+                await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
+                currentPageHeight = await config.waitForPageHeightIncrease(driver, currentPageHeight);
                 links = await driver.findElements(By.css('[data-testid="result-title-a"]'));
-                PreviousPageHeight = PageHeight;
-            } else {
-                Attempts++
+                if (maxLinks >= links.length) {
+                    break;
+                }
             }
         }
         const linksText = await Promise.all(links.map(el => el.getAttribute('href')));
@@ -254,11 +271,11 @@ export async function init(router: Router): Promise<void> {
         try {
             switch (req.body.engine) {
                 case 'google': {
-                    const result = await performGoogleSearch(req.body.query, req.body.include_images, req.body.LinkTarget);
+                    const result = await performGoogleSearch(req.body.query, req.body.include_images, req.body.max_links);
                     return res.send(result);
                 }
                 case 'duckduckgo': {
-                    const result = await performDuckDuckGoSearch(req.body.query, req.body.include_images, req.body.LinkTarget);
+                    const result = await performDuckDuckGoSearch(req.body.query, req.body.include_images, req.body.max_links);
                     return res.send(result);
                 }
                 default:
