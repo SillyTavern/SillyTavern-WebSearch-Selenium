@@ -167,11 +167,13 @@ async function performGoogleSearch(query: string, includeImages: boolean, maxLin
 
         // Get text from different sections
         const text = [
+            await getTextBySelector(driver, '.mZJni.Dn7Fzd'), // AI overview box
             await getTextBySelector(driver, '.wDYxhc'), // Answer box
             await getTextBySelector(driver, '.hgKElc'), // Knowledge panel
-            await getTextBySelector(driver, '.r025kc.lVm3ye'), // Page snippets
-            await getTextBySelector(driver, '.yDYNvb.lyLwlc'), // Old selectors (for compatibility)
-        ].join('\n');
+            await getTextBySelector(driver, '.kb0PBd.A9Y9g'), // Page snippets (latest selector)
+            await getTextBySelector(driver, '.r025kc.lVm3ye'), // Older page snippets
+            await getTextBySelector(driver, '.yDYNvb.lyLwlc'), // Even older page snippets
+        ].filter(x => x.trim()).join('\n');
 
         // Get links from the results
         const links = await driver.findElements(By.css('.yuRUbf a'));
